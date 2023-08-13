@@ -59,6 +59,7 @@ for dayStr in tqdm(lastSevenDays):
             # print(name)
             # print(len(data))
             itemDF = pd.DataFrame.from_dict(data)
+
             # display(itemDF)
             try:
                 itemDF = itemDF.drop(["open_price", "closed_price", "donch_top", "donch_bot"], axis=1)
