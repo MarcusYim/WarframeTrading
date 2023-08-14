@@ -1,6 +1,9 @@
 import json
 import os
 import sqlite3
+import time
+from multiprocessing.pool import ThreadPool
+
 import pandas as pd
 
 import requests
@@ -14,8 +17,14 @@ allCon = sqlite3.connect("allItems.db")
 allCur = allCon.cursor()
 
 
+def replaceTuples(tups: list):
+    for i in range(len(tups)):
+        tups[i] = tups[i][0]
+    return tups
+
+
 def getAllItems():
-    return allCur.execute("SELECT DISTINCT name FROM allItems").fetchall()
+    return replaceTuples(allCur.execute("SELECT DISTINCT name FROM allItems").fetchall())
 
 
 csvFileName = "allOrderData.csv"
@@ -31,20 +40,43 @@ except FileExistsError:
 def getDataLink(item: str):
     return f"https://api.warframe.market/v1/items/{item}/orders"
 
-allDF = pd.DataFrame()
 
-for item in getAllItems():
+def getItemTask(item: str):
     link = getDataLink(item)
     r = requests.get(link)
+    print(item)
 
-    if str(r.status_code)[0] != "2":
-        print(r.status_code)
-        continue
+    if str(r.status_code)[0] == "2":
+        data = r.json()["payload"]["orders"]
+        return pd.DataFrame.from_dict(data)
 
-    data = r.json()["payload"]["orders"]
+    print(r.status_code)
+    return pd.DataFrame()
 
-    itemDF = pd.DataFrame.from_dict(data)
 
-    allDF = pd.concat([allDF, itemDF])
+allDFs = []
 
-allDF.to_csv("sample.csv")
+with ThreadPool() as pool:
+    for result in pool.map(getItemTask, getAllItems(), chunksize=450):
+        allDFs.append(result)
+
+# for item in getAllItems():
+#    link = getDataLink(item)
+#    r = requests.get(link)
+
+#   print(item)
+
+#  if str(r.status_code)[0] != "2":
+#     continue
+
+#    data = r.json()["payload"]["orders"]
+
+#   itemDF = pd.DataFrame.from_dict(data)
+
+#  allDFs.append(itemDF)
+
+allDF = pd.concat(allDFs)
+
+allDF.to_csv("allOrderData.csv")
+
+os.remove("allOrderDataBackup.csv")
