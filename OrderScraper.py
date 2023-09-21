@@ -4,6 +4,8 @@ import sqlite3
 import time
 from multiprocessing.pool import ThreadPool
 
+import generateMaxRanks as mr
+
 import pandas as pd
 
 import requests
@@ -16,12 +18,15 @@ import requests
 allCon = sqlite3.connect("allItems.db")
 allCur = allCon.cursor()
 
+maxCon = sqlite3.connect("maxRanks.db")
+maxCur = maxCon.cursor()
 
 def replaceTuples(tups: list):
     for i in range(len(tups)):
         tups[i] = tups[i][0]
     return tups
 
+def getMaxRank(item: str)
 
 def getAllItems():
     return replaceTuples(allCur.execute("SELECT DISTINCT name FROM allItems").fetchall())
@@ -48,7 +53,15 @@ def getItemTask(item: str):
 
     if str(r.status_code)[0] == "2":
         data = r.json()["payload"]["orders"]
-        return pd.DataFrame.from_dict(data)
+        itemDF = pd.DataFrame.from_dict(data)
+
+        try:
+            itemDF["name"] = item
+            itemDF.drop(itemDF[itemDF["mod_rank"] != max_rank])
+        except KeyError:
+            pass
+
+        return itemDF
 
     print(r.status_code)
     return pd.DataFrame()
