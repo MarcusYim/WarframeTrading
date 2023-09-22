@@ -25,13 +25,13 @@ max_ranks = cur.execute(
     "max.order_type = allItems.order_type;").fetchall()
 
 maxDF = pd.DataFrame.from_records(max_ranks)
-
+maxDF = maxDF.replace("", -1.0)
 maxDF.to_csv("maxRankData.csv")
 
 open("maxRanks.db", "x")
 con = sqlite3.connect("maxRanks.db")
 cur = con.cursor()
-cur.execute("CREATE TABLE maxRanks(row int, name varchar(10), date datetime, quantity int, order_type varchar(10));")
+cur.execute("CREATE TABLE maxRanks(row int, name varchar(10), max_rank real, date datetime, order_type varchar(10));")
 
 file = open('maxRankData.csv')
 contents = csv.reader(file)

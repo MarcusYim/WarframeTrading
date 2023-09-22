@@ -18,19 +18,18 @@ import requests
 allCon = sqlite3.connect("allItems.db")
 allCur = allCon.cursor()
 
-maxCon = sqlite3.connect("maxRanks.db")
-maxCur = maxCon.cursor()
-
 def replaceTuples(tups: list):
     for i in range(len(tups)):
         tups[i] = tups[i][0]
     return tups
 
-def getMaxRank(item: str)
+def getMaxRank(item: str):
+    maxCon = sqlite3.connect("maxRanks.db")
+    maxCur = maxCon.cursor()
+    return replaceTuples(maxCur.execute("SELECT max_rank FROM maxRanks WHERE name = '" + item + "'").fetchall())[0]
 
 def getAllItems():
     return replaceTuples(allCur.execute("SELECT DISTINCT name FROM allItems").fetchall())
-
 
 csvFileName = "allOrderData.csv"
 
@@ -45,7 +44,6 @@ except FileExistsError:
 def getDataLink(item: str):
     return f"https://api.warframe.market/v1/items/{item}/orders"
 
-
 def getItemTask(item: str):
     link = getDataLink(item)
     r = requests.get(link)
@@ -54,10 +52,10 @@ def getItemTask(item: str):
     if str(r.status_code)[0] == "2":
         data = r.json()["payload"]["orders"]
         itemDF = pd.DataFrame.from_dict(data)
-
         try:
             itemDF["name"] = item
-            itemDF.drop(itemDF[itemDF["mod_rank"] != max_rank])
+            #find the max rank for all mods
+            itemDF.drop(itemDF[itemDF["mod_rank"] != getMaxRank(item)])
         except KeyError:
             pass
 
@@ -90,6 +88,6 @@ with ThreadPool() as pool:
 
 allDF = pd.concat(allDFs)
 
-allDF.to_csv("allOrderData.csv")
+#allDF.to_csv("allOrderData.csv")
 
-os.remove("allOrderDataBackup.csv")
+#os.remove("allOrderDataBackup.csv")
