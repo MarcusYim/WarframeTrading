@@ -4,7 +4,7 @@ import sqlite3
 import time
 from multiprocessing.pool import ThreadPool
 
-import generateMaxRanks as mr
+import GenerateMaxRanks as mr
 
 import pandas as pd
 
