@@ -20,16 +20,20 @@ allCur = allCon.cursor()
 
 maxRanks = pd.read_csv("maxRankData.csv")
 
+
 def replaceTuples(tups: list):
     for i in range(len(tups)):
         tups[i] = tups[i][0]
     return tups
 
+
 def getMaxRank(item: str):
     return int(maxRanks.loc[maxRanks["0"] == "adaptation", "1"].to_list()[0])
 
+
 def getAllItems():
     return replaceTuples(allCur.execute("SELECT DISTINCT name FROM allItems").fetchall())
+
 
 csvFileName = "allOrderData.csv"
 
@@ -44,6 +48,7 @@ except FileExistsError:
 def getDataLink(item: str):
     return f"https://api.warframe.market/v1/items/{item}/orders"
 
+
 def getItemTask(item: str):
     link = getDataLink(item)
     r = requests.get(link)
@@ -52,9 +57,11 @@ def getItemTask(item: str):
     if str(r.status_code)[0] == "2":
         data = r.json()["payload"]["orders"]
         itemDF = pd.DataFrame.from_dict(data)
+
         try:
             itemDF["name"] = item
-            itemDF = itemDF[itemDF["mod_rank"] == 10]
+            itemDF = itemDF[itemDF["user"].astype("string").str.contains("\'status\': \'ingame\'", regex=False)]
+            itemDF = itemDF[itemDF["mod_rank"] == getMaxRank(item)]
         except KeyError:
             pass
 
@@ -65,8 +72,6 @@ def getItemTask(item: str):
 
 
 allDFs = []
-
-getItemTask("adaptation")
 
 with ThreadPool() as pool:
     for result in pool.map(getItemTask, getAllItems(), chunksize=450):
