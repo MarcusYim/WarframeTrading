@@ -95,9 +95,14 @@ buyable = []
 
 for item in getAllItems():
     slope = sp.stats.linregress(list(range(1, 8)), getMedians(item)).slope
-    avRange = getAverageRange(item)
     volume = getAverageVolume(item)
-    if slope > -0.1 and avRange < 5 and volume > 50:
-        buyable.append(item)
 
-# print(buyable)
+    try:
+        orderSpread = getOrderSpreads(item)
+        if slope > -0.1 and orderSpread < 5 and volume > 50:
+            buyable.append(item)
+    except TypeError:
+        pass
+
+
+print(buyable)
