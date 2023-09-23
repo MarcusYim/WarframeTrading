@@ -14,7 +14,6 @@ try:
 except FileNotFoundError:
     pass
 
-
 con = sqlite3.connect("allItems.db")
 cur = con.cursor()
 
@@ -28,14 +27,5 @@ maxDF = pd.DataFrame.from_records(max_ranks)
 maxDF = maxDF.replace("", -1.0)
 maxDF.to_csv("maxRankData.csv")
 
-open("maxRanks.db", "x")
-con = sqlite3.connect("maxRanks.db")
-cur = con.cursor()
-cur.execute("CREATE TABLE maxRanks(row int, name varchar(10), max_rank real, date datetime, order_type varchar(10));")
-
-file = open('maxRankData.csv')
-contents = csv.reader(file)
-insert_items = "INSERT INTO maxRanks VALUES(?,?,?,?,?)"
-cur.executemany(insert_items, contents)
 con.commit()
 con.close()
