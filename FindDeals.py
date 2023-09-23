@@ -7,7 +7,7 @@ import pandas as pd
 import scipy as sp
 import os
 
-#SELECT name, id, platinum, mod_rank FROM allOrders WHERE mod_rank = (SELECT max(mod_rank) FROM allOrders a1 WHERE a1.name = allOrders.name)
+# SELECT name, id, platinum, mod_rank FROM allOrders WHERE mod_rank = (SELECT max(mod_rank) FROM allOrders a1 WHERE a1.name = allOrders.name)
 
 if not os.path.isfile("allItems.db"):
     open("allItems.db", "x")
@@ -82,25 +82,13 @@ def getAverageVolume(name: str):
     return sum(volume) / len(volume)
 
 
-def getMinOrders():
-    return ordersCur.execute("select allOrders.name, allOrders.id, allOrders.platinum from allOrders inner join ("
-                             "select name, id, min(platinum) platinum from allOrders a2 where a2.order_type = 'sell' "
-                             "AND instr(a2.user, '''status'': ''ingame''') > 0 AND a2.visible = 'True' group by name) "
-                             "as max on max.name = allOrders.name and max.platinum = allOrders.platinum and max.id = "
-                             "allOrders.id;").fetchall()
-
-
-def getMaxOrders():
-    return ordersCur.execute("select allOrders.name, allOrders.id, allOrders.platinum from allOrders inner join ("
-                             "select name, id, max(platinum) platinum from allOrders a2 where a2.order_type = 'sell' "
-                             "AND instr(a2.user, '''status'': ''ingame''') > 0 AND a2.visible = 'True' group by name) "
-                             "as max on max.name = allOrders.name and max.platinum = allOrders.platinum and max.id = "
-                             "allOrders.id;").fetchall()
-
-#calculates the spread in the current orders
-#using the range value from allItems is not real-time enough
-def getOrderSpreads():
-
+# calculates the spread in the current orders
+# using the range value from allItems is not real-time enough
+def getOrderSpreads(name: str):
+    return ordersCur.execute("WITH maxes(max, name) AS (select MAX(platinum), name FROM allOrders WHERE order_type = "
+                             f"'buy' AND name = '{name}') SELECT MIN(platinum) - max FROM allOrders, maxes WHERE "
+                             "allOrders.name = maxes.name AND allOrders.order_type = 'sell' AND allOrders.name = '"
+                             f"{name}';").fetchone()[0]
 
 
 buyable = []
