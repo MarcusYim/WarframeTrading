@@ -18,15 +18,15 @@ import requests
 allCon = sqlite3.connect("allItems.db")
 allCur = allCon.cursor()
 
+maxRanks = pd.read_csv("maxRankData.csv")
+
 def replaceTuples(tups: list):
     for i in range(len(tups)):
         tups[i] = tups[i][0]
     return tups
 
 def getMaxRank(item: str):
-    maxCon = sqlite3.connect("maxRanks.db")
-    maxCur = maxCon.cursor()
-    return replaceTuples(maxCur.execute("SELECT max_rank FROM maxRanks WHERE name = '" + item + "'").fetchall())[0]
+    return int(maxRanks.loc[maxRanks["0"] == "adaptation", "1"].to_list()[0])
 
 def getAllItems():
     return replaceTuples(allCur.execute("SELECT DISTINCT name FROM allItems").fetchall())
@@ -54,8 +54,7 @@ def getItemTask(item: str):
         itemDF = pd.DataFrame.from_dict(data)
         try:
             itemDF["name"] = item
-            #find the max rank for all mods
-            itemDF.drop(itemDF[itemDF["mod_rank"] != getMaxRank(item)])
+            itemDF = itemDF[itemDF["mod_rank"] == 10]
         except KeyError:
             pass
 
@@ -67,27 +66,14 @@ def getItemTask(item: str):
 
 allDFs = []
 
+getItemTask("adaptation")
+
 with ThreadPool() as pool:
     for result in pool.map(getItemTask, getAllItems(), chunksize=450):
         allDFs.append(result)
 
-# for item in getAllItems():
-#    link = getDataLink(item)
-#    r = requests.get(link)
-
-#   print(item)
-
-#  if str(r.status_code)[0] != "2":
-#     continue
-
-#    data = r.json()["payload"]["orders"]
-
-#   itemDF = pd.DataFrame.from_dict(data)
-
-#  allDFs.append(itemDF)
-
 allDF = pd.concat(allDFs)
 
-#allDF.to_csv("allOrderData.csv")
+allDF.to_csv("allOrderData.csv")
 
-#os.remove("allOrderDataBackup.csv")
+os.remove("allOrderDataBackup.csv")
