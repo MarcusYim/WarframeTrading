@@ -7,7 +7,9 @@ import pandas as pd
 import scipy as sp
 import os
 
-# SELECT name, id, platinum, mod_rank FROM allOrders WHERE mod_rank = (SELECT max(mod_rank) FROM allOrders a1 WHERE a1.name = allOrders.name)
+slopeThreshold = -0.05
+spreadThreshold = 5
+volumeThreshold = 50
 
 if not os.path.isfile("allItems.db"):
     open("allItems.db", "x")
@@ -99,10 +101,9 @@ for item in getAllItems():
 
     try:
         orderSpread = getOrderSpreads(item)
-        if slope > -0.1 and orderSpread < 5 and volume > 50:
+        if slope > slopeThreshold and orderSpread < spreadThreshold and volume > volumeThreshold:
             buyable.append(item)
     except TypeError:
         pass
-
 
 print(buyable)
