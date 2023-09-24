@@ -106,4 +106,11 @@ for item in getAllItems():
     except TypeError:
         pass
 
-print(buyable)
+try:
+    os.remove("buyableItems.csv")
+except FileNotFoundError:
+    pass
+
+with open("buyableItems.csv", "w") as r:
+    write = csv.writer(r)
+    write.writerow(buyable)
