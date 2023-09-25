@@ -12,7 +12,7 @@ def getBuyableItemsFromCsv():
 
 if __name__ == '__main__':
     root = Tk()
-    window = Window(root)
+    window = Window(root, getBuyableItemsFromCsv())
 
     print(getBuyableItemsFromCsv())
 
