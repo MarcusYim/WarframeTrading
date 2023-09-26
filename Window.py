@@ -14,11 +14,26 @@ class Window:
         self.generateMenu("bought", buyList)
         self.generateMenu("sold", sellList)
 
-    def boughtItem(self, frame):
+    def boughtItem(self, frame, item):
+        self.removeItemFromFile(item, "buyableItems.csv")
+        print("bought: " + item)
         frame.destroy()
 
-    def soldItem(self, frame):
+    def soldItem(self, frame, item):
+        self.removeItemFromFile(item, "sellableItems.csv")
+        print("sold: " + item)
         frame.destroy()
+
+    def removeItemFromFile(self, item, file):
+        with open(file, "r") as fout:
+            line = fout.read().replace(item + ",", "")
+            line = line.replace(item, "")
+
+        with open(file, "w+") as fin:
+            fin.write(line)
+
+        fout.close()
+        fin.close()
 
     def cancelItem(self, frame):
         frame.destroy()
@@ -32,12 +47,12 @@ class Window:
             cell.pack(in_=menu, padx=10, pady=5, fill=X, anchor="w")
 
             cancel = ttk.Button(self.frame.interior, text="cancel")
-            cancel.config(command=partial(self.cancelItem, cell))
+            cancel.config(command=partial(self.cancelItem, cell, cancel))
             cancel.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
-            bought = ttk.Button(self.frame.interior, text=mode)
-            bought.config(command=partial(self.boughtItem, cell))
-            bought.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
+            action = ttk.Button(self.frame.interior, text=mode)
+            action.config(command=partial(self.boughtItem if mode == "bought" else self.soldItem, cell, list[i]))
+            action.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
             item = tk.Label(self.frame.interior, text=list[i])
             item.pack(in_=cell, padx=10, anchor="w")
