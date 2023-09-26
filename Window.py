@@ -1,3 +1,5 @@
+import sqlite3
+from datetime import datetime
 from functools import partial
 from tkinter.constants import *
 
@@ -11,11 +13,15 @@ class Window:
         self.frame = VerticalScrolledFrame(master)
         self.frame.pack(expand=True, fill=tk.BOTH)
 
+        self.invCon = sqlite3.connect("allOrders.db")
+        self.invCur = self.invCon.cursor()
+
         self.generateMenu("bought", buyList)
         self.generateMenu("sold", sellList)
 
     def boughtItem(self, frame, item):
         self.removeItemFromFile(item, "buyableItems.csv")
+        self.invCur.execute(f"INSERT INTO inventory VALUES({item}, -1, {datetime.now})")
         print("bought: " + item)
         frame.destroy()
 
