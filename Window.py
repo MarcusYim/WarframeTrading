@@ -9,9 +9,11 @@ from VerticalScrolledFrame import VerticalScrolledFrame
 import tkinter.ttk as ttk
 import tkinter as tk
 
-api_url = 'https://api.warframe.market/v1/auth/signin'
+auth_url = 'https://api.warframe.market/v1/auth/signin'
+order_url = 'https://api.warframe.market/v1/profile/orders'
 email = 'scholarsedgetutoringbellevue@gmail.com'
 password = 'abcdefg'
+
 
 class Window:
 
@@ -28,11 +30,13 @@ class Window:
         self.generateConfirmationMenu("sell", sellList)
 
     def postBuyOrder(self, frame, item):
-        #send api call
+        authToken = self.retrieveAuthToken()
+
+
         frame.destroy()
 
     def postSellOrder(self, frame, item):
-        #send api call
+        # send api call
         frame.destroy()
 
     def boughtItem(self, frame, item):
@@ -86,7 +90,8 @@ class Window:
         menu = tk.Frame(self.frame.interior)
         menu.pack(padx=10, pady=5, expand=True, side=LEFT, anchor="n")
 
-        tk.Label(self.frame.interior, text="confirm " + mode + " order", underline=True, font='Helvetica 10 bold').pack(in_=menu, pady=10, anchor="n")
+        tk.Label(self.frame.interior, text="confirm " + mode + " order", underline=True, font='Helvetica 10 bold').pack(
+            in_=menu, pady=10, anchor="n")
 
         for i in range(len(list)):
             cell = tk.Frame(self.frame.interior)
@@ -96,7 +101,8 @@ class Window:
             cancel.config(command=partial(self.cancelItem, cell, cancel))
             cancel.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
-            action = ttk.Button(self.frame.interior, text="confirm buy order" if mode == "buy" else "confirm sell order")
+            action = ttk.Button(self.frame.interior,
+                                text="confirm buy order" if mode == "buy" else "confirm sell order")
             action.config(command=partial(self.boughtItem if mode == "buy" else self.soldItem, cell, list[i]))
             action.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
@@ -114,11 +120,40 @@ class Window:
             'Content-Type': 'application/json'
         }
 
-        response = requests.post(api_url, json=payload, headers=headers)
+        response = requests.post(auth_url, json=payload, headers=headers)
 
         if response.status_code == 200:
 
-            auth_token = response.headers['set-cookie']
+            return response.headers['set-cookie']
         else:
             print(f"Authorization request failed with status code {response.status_code}")
+            return None
+
+    def makeOrderRequest(self, authToken, name, orderType, platinum, quantity, rank):
+        payload = {
+            'name': name,
+            'item': email,
+            'order_type': orderType,
+            'platinum': platinum,
+            'quantity': quantity
+        }
+
+        headers = {
+            'Authorization': 'JWT',
+            'Content-Type': 'application/json'
+        }
+
+        if rank != -1:
+            payload['rank'] = rank
+
+        session = requests.Session()
+        session.cookies.set('JWT', authToken)
+
+        response = session.post(order_url, json=payload, headers=headers)
+
+        if response.status_code == 200:
+            print("POST request was successful:")
             print(response.text)
+
+        else:
+            print("did not work")
