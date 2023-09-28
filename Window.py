@@ -94,7 +94,7 @@ class Window:
                                           list[i][1], list[i][2]))
             action.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
-            item = tk.Label(self.frame.interior, text=list[i][0])
+            item = tk.Label(self.frame.interior, text=str(list[i][0]) + ": " + str(list[i][1]) + "p")
             item.pack(in_=cell, padx=10, anchor="w")
 
     def generateConfirmationMenu(self, mode, list):
