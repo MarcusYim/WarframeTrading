@@ -11,6 +11,7 @@ import tkinter as tk
 
 auth_url = 'https://api.warframe.market/v1/auth/signin'
 order_url = 'https://api.warframe.market/v1/profile/orders'
+item_url = 'https://api.warframe.market/v1/items/'
 email = 'scholarsedgetutoringbellevue@gmail.com'
 password = 'abcdefg'
 
@@ -21,7 +22,7 @@ class Window:
         self.frame = VerticalScrolledFrame(master)
         self.frame.pack(expand=True, fill=tk.BOTH)
 
-        self.invCon = sqlite3.connect("allOrders.db")
+        self.invCon = sqlite3.connect("inventory.db")
         self.invCur = self.invCon.cursor()
 
         self.generateOptionMenu("buy", buyList)
@@ -29,25 +30,29 @@ class Window:
         self.generateOptionMenu("sell", sellList)
         self.generateConfirmationMenu("sell", sellList)
 
-    def postBuyOrder(self, frame, item):
+    def postBuyOrder(self, frame, name, platinum, rank):
         authToken = self.retrieveAuthToken()
-
+        self.makeOrderRequest(authToken=authToken, name=name, orderType="buy", platinum=platinum, quantity=1, rank=rank)
 
         frame.destroy()
 
-    def postSellOrder(self, frame, item):
-        # send api call
+    def postSellOrder(self, frame, name, platinum, rank):
+        authToken = self.retrieveAuthToken()
+        self.makeOrderRequest(authToken=authToken, name=name, orderType="sell", platinum=platinum, quantity=1,
+                              rank=rank)
+
         frame.destroy()
 
-    def boughtItem(self, frame, item):
-        self.removeItemFromFile(item, "buyableItems.csv")
-        self.invCur.execute(f"INSERT INTO inventory VALUES({item}, -1, {datetime.now})")
-        print("bought: " + item)
+    def boughtItem(self, frame, name, platinum):
+        self.removeItemFromFile(name, "buyableItems.csv")
+        self.invCur.execute(f"INSERT INTO inventory VALUES('{name}', {platinum}, datetime('now'))")
+        print("bought: " + name)
+        self.invCon.commit()
         frame.destroy()
 
-    def soldItem(self, frame, item):
-        self.removeItemFromFile(item, "sellableItems.csv")
-        print("sold: " + item)
+    def soldItem(self, frame, name, platinum):
+        self.removeItemFromFile(name, "sellableItems.csv")
+        print("sold: " + name)
         frame.destroy()
 
     def removeItemFromFile(self, item, file):
@@ -80,10 +85,11 @@ class Window:
             cancel.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
             action = ttk.Button(self.frame.interior, text="post buy order" if mode == "buy" else "post sell order")
-            action.config(command=partial(self.postBuyOrder if mode == "buy" else self.postSellOrder, cell, list[i]))
+            action.config(command=partial(self.postBuyOrder if mode == "buy" else self.postSellOrder, cell, list[i][0],
+                                          list[i][1], list[i][2]))
             action.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
-            item = tk.Label(self.frame.interior, text=list[i])
+            item = tk.Label(self.frame.interior, text=list[i][0])
             item.pack(in_=cell, padx=10, anchor="w")
 
     def generateConfirmationMenu(self, mode, list):
@@ -103,10 +109,10 @@ class Window:
 
             action = ttk.Button(self.frame.interior,
                                 text="confirm buy order" if mode == "buy" else "confirm sell order")
-            action.config(command=partial(self.boughtItem if mode == "buy" else self.soldItem, cell, list[i]))
+            action.config(command=partial(self.boughtItem if mode == "buy" else self.soldItem, cell, list[i][0], list[i][1]))
             action.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
-            item = tk.Label(self.frame.interior, text=list[i])
+            item = tk.Label(self.frame.interior, text=list[i][0])
             item.pack(in_=cell, padx=10, anchor="w")
 
     def retrieveAuthToken(self):
@@ -123,19 +129,25 @@ class Window:
         response = requests.post(auth_url, json=payload, headers=headers)
 
         if response.status_code == 200:
-
-            return response.headers['set-cookie']
+            return response.headers['set-cookie'].replace("JWT=", "")
         else:
             print(f"Authorization request failed with status code {response.status_code}")
             return None
 
     def makeOrderRequest(self, authToken, name, orderType, platinum, quantity, rank):
+        response = requests.get(item_url + name)
+
+        if response.status_code == 200:
+            itemId = response.json()["payload"]["item"]["id"]
+        else:
+            raise ValueError("Item name not recognized")
+
         payload = {
-            'name': name,
-            'item': email,
+            'item': itemId,
             'order_type': orderType,
             'platinum': platinum,
-            'quantity': quantity
+            'quantity': quantity,
+            'visible': True,
         }
 
         headers = {
@@ -156,4 +168,6 @@ class Window:
             print(response.text)
 
         else:
-            print("did not work")
+            print("POST request failed:")
+            print(response.text)
+            raise ValueError()

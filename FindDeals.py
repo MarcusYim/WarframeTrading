@@ -93,6 +93,18 @@ def getOrderSpreads(name: str):
                              f"{name}';").fetchone()[0]
 
 
+def getMaxBuyOrder(name: str):
+    return \
+    ordersCur.execute(f"SELECT MAX(platinum) FROM allOrders WHERE order_type = 'buy' AND name = '{name}'").fetchone()[0]
+
+
+def getMaxRank(name: str):
+    try:
+        return int(ordersCur.execute(f"SELECT DISTINCT mod_rank FROM allOrders WHERE name = '{name}'").fetchone()[0])
+    except ValueError:
+        return -1
+
+
 buyable = []
 
 for item in getAllItems():
@@ -102,7 +114,7 @@ for item in getAllItems():
     try:
         orderSpread = getOrderSpreads(item)
         if slope > slopeThreshold and orderSpread < spreadThreshold and volume > volumeThreshold:
-            buyable.append(item)
+            buyable.append((item, getMaxBuyOrder(item), getMaxRank(item)))
     except TypeError:
         pass
 
