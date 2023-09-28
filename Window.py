@@ -43,22 +43,27 @@ class Window:
 
         frame.destroy()
 
-    def boughtItem(self, frame, name, platinum):
-        self.removeItemFromFile(name, "buyableItems.csv")
+    def boughtItem(self, frame, name, platinum, rank):
+        self.removeItemFromFile("buyableItems.csv", name, platinum, rank)
         self.invCur.execute(f"INSERT INTO inventory VALUES('{name}', {platinum}, datetime('now'))")
         print("bought: " + name)
         self.invCon.commit()
         frame.destroy()
 
-    def soldItem(self, frame, name, platinum):
-        self.removeItemFromFile(name, "sellableItems.csv")
+    def soldItem(self, frame, name, platinum, rank):
+        self.removeItemFromFile("sellableItems.csv", name, platinum, rank)
+
+        self.invCur.execute(f"DELETE FROM inventory WHERE buy_date IN (SELECT buy_date FROM (SELECT buy_date FROM "
+                            f"inventory WHERE name = '{name}' ORDER BY buy_date LIMIT 1))")
+
         print("sold: " + name)
+        self.invCon.commit()
         frame.destroy()
 
-    def removeItemFromFile(self, item, file):
+    def removeItemFromFile(self, file, name, platinum, rank):
         with open(file, "r") as fout:
-            line = fout.read().replace(item + ",", "")
-            line = line.replace(item, "")
+            line = fout.read().replace(f"\"(\'{name}\', {platinum}, {rank})\",", "")
+            line = line.replace(f"\"(\'{name}\', {platinum}, {rank})\"", "")
 
         with open(file, "w+") as fin:
             fin.write(line)
@@ -109,7 +114,7 @@ class Window:
 
             action = ttk.Button(self.frame.interior,
                                 text="confirm buy order" if mode == "buy" else "confirm sell order")
-            action.config(command=partial(self.boughtItem if mode == "buy" else self.soldItem, cell, list[i][0], list[i][1]))
+            action.config(command=partial(self.boughtItem if mode == "buy" else self.soldItem, cell, list[i][0], list[i][1], list[i][2]))
             action.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
             item = tk.Label(self.frame.interior, text=list[i][0])

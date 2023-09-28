@@ -6,8 +6,8 @@ from tkinter import ttk
 from Window import Window
 
 
-def getBuyableItemsFromCsv():
-    with open("buyableItems.csv") as f:
+def getItemsFromCsv(file):
+    with open(file) as f:
         list = csv.reader(f).__next__()
 
     retList = []
@@ -19,7 +19,7 @@ def getBuyableItemsFromCsv():
 if __name__ == '__main__':
     root = Tk()
 
-    window = Window(root, getBuyableItemsFromCsv(), [("a", 1, 1), ("b", 2, 2), ("c", 3, 3), ("d", 4, 4)])
+    window = Window(root, getItemsFromCsv("buyableItems.csv"), getItemsFromCsv("sellableItems.csv"))
 
 
     while True:
