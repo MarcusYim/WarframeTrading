@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import sqlite3
@@ -82,3 +83,22 @@ allDF = pd.concat(allDFs)
 allDF.to_csv("allOrderData.csv")
 
 os.remove("allOrderDataBackup.csv")
+
+try:
+    os.remove("allOrders.db")
+except FileNotFoundError:
+    pass
+
+open("allOrders.db", "x")
+con = sqlite3.connect("allOrders.db")
+cur = con.cursor()
+cur.execute("CREATE TABLE allOrders(row int, platinum int, order_type varchar(10), quantity int, user varchar(10), "
+            "platform varchar(10), creation_date datetime, last_update datetime, visible varchar(10), id varchar("
+            "10), mod_rank real, region varchar(10), name varchar(10));")
+
+file = open('allOrderData.csv')
+contents = csv.reader(file)
+insert_items = "INSERT INTO allOrders VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+cur.executemany(insert_items, contents)
+con.commit()
+con.close()

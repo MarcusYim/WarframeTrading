@@ -11,37 +11,6 @@ slopeThreshold = -0.05
 spreadThreshold = 5
 volumeThreshold = 50
 
-if not os.path.isfile("allItems.db"):
-    open("allItems.db", "x")
-    con = sqlite3.connect("allItems.db")
-    cur = con.cursor()
-    cur.execute("CREATE TABLE allItems(name varchar(10), date datetime, order_type varchar(10), volume int, "
-                "min_price real, max_price real, range real, median real, avg_price real, mod_rank real, "
-                "item_id varchar(10));")
-
-    file = open('allItemData.csv')
-    contents = csv.reader(file)
-    insert_items = "INSERT INTO allItems VALUES(?,?,?,?,?,?,?,?,?,?,?)"
-    cur.executemany(insert_items, contents)
-    con.commit()
-    con.close()
-
-# replace later to update allOrders
-if not os.path.isfile("allOrders.db"):
-    open("allOrders.db", "x")
-    con = sqlite3.connect("allOrders.db")
-    cur = con.cursor()
-    cur.execute("CREATE TABLE allOrders(row int, platinum int, order_type varchar(10), quantity int, user varchar(10), "
-                "platform varchar(10), creation_date datetime, last_update datetime, visible varchar(10), id varchar("
-                "10), mod_rank real, region varchar(10), name varchar(10));")
-
-    file = open('allOrderData.csv')
-    contents = csv.reader(file)
-    insert_items = "INSERT INTO allOrders VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-    cur.executemany(insert_items, contents)
-    con.commit()
-    con.close()
-
 if not os.path.isfile("inventory.db"):
     open("inventory.db", "x")
     con = sqlite3.connect("inventory.db")

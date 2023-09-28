@@ -1,10 +1,12 @@
+import csv
+import sqlite3
+
 import requests
 from datetime import datetime, timedelta
 from tqdm import tqdm
 import pandas as pd
 import os
 import numpy as np
-
 
 allItemsLink = "https://api.warframe.market/v1/items"
 r = requests.get(allItemsLink)
@@ -20,7 +22,6 @@ except FileNotFoundError:
     pass
 except FileExistsError:
     raise Exception("Remove the backup or the main csv file, one shouldn't be there for this to run.")
-
 
 def isFullData(data):
     if len(data) == 0:
@@ -43,7 +44,6 @@ def getDayStr(daysBack):
 
 
 lastSevenDays = [getDayStr(x) for x in range(1, 9)]
-print(lastSevenDays)
 
 df = pd.DataFrame()
 
@@ -56,8 +56,6 @@ for dayStr in tqdm(lastSevenDays):
     foundData += 1
     for name, data in r.json().items():
         if isFullData(data):
-            # print(name)
-            # print(len(data))
             itemDF = pd.DataFrame.from_dict(data)
 
             # display(itemDF)
@@ -92,9 +90,28 @@ df["item_id"] = df.apply(lambda row: itemListDF[itemListDF["url_name"] == row["n
 df["order_type"] = df.get("order_type").str.lower()
 df.to_csv("allItemData.csv", index=False)
 
-os.remove("allItemDataBackup.csv")
-
 with open('allItemData.csv', 'r') as fin:
     data = fin.read().splitlines(True)
 with open('allItemData.csv', 'w') as fout:
     fout.writelines(data[1:])
+
+os.remove("allItemDataBackup.csv")
+
+try:
+    os.remove("allItems.db")
+except FileNotFoundError:
+    pass
+
+open("allItems.db", "x")
+con = sqlite3.connect("allItems.db")
+cur = con.cursor()
+cur.execute("CREATE TABLE allItems(name varchar(10), date datetime, order_type varchar(10), volume int, "
+            "min_price real, max_price real, range real, median real, avg_price real, mod_rank real, "
+            "item_id varchar(10));")
+
+file = open('allItemData.csv')
+contents = csv.reader(file)
+insert_items = "INSERT INTO allItems VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+cur.executemany(insert_items, contents)
+con.commit()
+con.close()

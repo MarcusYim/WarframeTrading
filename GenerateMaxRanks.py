@@ -9,11 +9,6 @@ try:
 except FileNotFoundError:
     pass
 
-try:
-    os.remove("maxRanks.db")
-except FileNotFoundError:
-    pass
-
 con = sqlite3.connect("allItems.db")
 cur = con.cursor()
 
