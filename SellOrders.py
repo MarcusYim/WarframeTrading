@@ -15,15 +15,15 @@ invCon = sqlite3.connect("inventory.db")
 invCur = invCon.cursor()
 
 def getInventory():
-    return replaceTuples(invCur.execute("SELECT DISTINCT buy_date FROM inventory").fetchall())
+    return replaceTuples(invCur.execute("SELECT strftime('%Y %m %d %H %M %S %s','buy_date') FROM inventory").fetchall())
 # using exact datetime value of buy command as an ID to prevent confusion from owning two items of same type
 # just means we have to back trace item name from what time it was bought
 
-def traceName(buy_date: datetime):
-    return invCur.execute(f"SELECT name FROM inventory WHERE datetime = '{buy_date}'").fetchone()[0]
+def traceName(buy_date: str):
+    return invCur.execute(f"SELECT name FROM inventory WHERE strftime('%Y %m %d %H %M %S %s','buy_date') = '{buy_date}'").fetchone()[0]
 
-def getBoughtPrice(buy_date: datetime):
-    return invCur.execute(f"SELECT buy_price FROM inventory WHERE datetime = '{buy_date}'").fetchone()[0]
+def getBoughtPrice(buy_date: str):
+    return invCur.execute(f"SELECT buy_price FROM inventory WHERE strftime('%Y %m %d %H %M %S %s','buy_date') = '{buy_date}'").fetchone()[0]
 
 def getMinSellOrder(name: str):
     return ordersCur.execute(f"SELECT MIN(platinum) FROM allOrders WHERE order_type = 'sell' AND name = '{name}'").fetchone()[0]
