@@ -82,7 +82,10 @@ allDF = pd.concat(allDFs)
 
 allDF.to_csv("allOrderData.csv")
 
-os.remove("allOrderDataBackup.csv")
+try:
+    os.remove("allOrderDataBackup.csv")
+except FileNotFoundError:
+    pass
 
 try:
     os.remove("allOrders.db")
