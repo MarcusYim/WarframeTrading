@@ -38,8 +38,7 @@ class Window:
 
     def postSellOrder(self, frame, name, platinum, rank):
         authToken = self.retrieveAuthToken()
-        self.makeOrderRequest(authToken=authToken, name=name, orderType="sell", platinum=platinum, quantity=1,
-                              rank=rank)
+        self.makeOrderRequest(authToken=authToken, name=name, orderType="sell", platinum=platinum, quantity=1, rank=rank)
 
         frame.destroy()
 
@@ -52,7 +51,6 @@ class Window:
 
     def soldItem(self, frame, name, platinum, rank):
         self.removeItemFromFile("sellableItems.csv", name, platinum, rank)
-
         self.invCur.execute(f"DELETE FROM inventory WHERE buy_date IN (SELECT buy_date FROM (SELECT buy_date FROM "
                             f"inventory WHERE name = '{name}' ORDER BY buy_date LIMIT 1))")
 
