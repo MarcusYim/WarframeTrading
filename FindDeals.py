@@ -8,8 +8,8 @@ import scipy as sp
 import os
 
 slopeThreshold = -0.05
-spreadThreshold = 5
 volumeThreshold = 50
+percentMedian = 0.05
 
 if not os.path.isfile("inventory.db"):
     open("inventory.db", "x")
@@ -40,6 +40,9 @@ def getMedians(name: str):
     return replaceTuples(
         itemsCur.execute(f"SELECT median FROM allItems WHERE name = '{name}' AND order_type = 'closed'").fetchall())
 
+def getAverageMedian(name: str):
+    medians = getMedians(name)
+    return sum(medians) / len(medians)
 
 def getAverageRange(name: str):
     ranges = replaceTuples(
@@ -82,7 +85,7 @@ for item in getAllItems():
 
     try:
         orderSpread = getOrderSpreads(item)
-        if slope > slopeThreshold and orderSpread < spreadThreshold and volume > volumeThreshold:
+        if slope > slopeThreshold and orderSpread < percentMedian * getAverageMedian(item) and volume > volumeThreshold:
             buyable.append((item, getMaxBuyOrder(item), getMaxRank(item)))
     except TypeError:
         pass
