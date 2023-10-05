@@ -84,7 +84,7 @@ class Window:
             cell.pack(in_=menu, padx=10, pady=5, fill=X, anchor="w")
 
             cancel = ttk.Button(self.frame.interior, text="reject")
-            cancel.config(command=partial(self.cancelItem, cell, cancel))
+            cancel.config(command=partial(self.cancelItem, cell))
             cancel.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
             action = ttk.Button(self.frame.interior, text="post buy order" if mode == "buy" else "post sell order")
@@ -107,7 +107,7 @@ class Window:
             cell.pack(in_=menu, padx=10, pady=5, fill=X, anchor="w")
 
             cancel = ttk.Button(self.frame.interior, text="cancel")
-            cancel.config(command=partial(self.cancelItem, cell, cancel))
+            cancel.config(command=partial(self.cancelItem, cell))
             cancel.pack(in_=cell, side=RIGHT, padx=10, anchor="e")
 
             action = ttk.Button(self.frame.interior,
