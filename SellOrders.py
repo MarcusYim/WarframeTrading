@@ -28,6 +28,10 @@ def getBoughtPrice(buy_date: str):
 def getMinSellOrder(name: str):
     return ordersCur.execute(f"SELECT MIN(platinum) FROM allOrders WHERE order_type = 'sell' AND name = '{name}'").fetchone()[0]
 
+# def checkAge(buy_date: str):  # returns how long we've held an item in days
+#    x = ordersCur.execute(f"SELECT strftime('%d', buy_date) FROM inventory WHERE strftime('%Y %m %d %H %M %S %s',buy_date) = '{buy_date}'")
+#    return ordersCur.execute(f"SELECT strftime('%d', 'now') - {x}")
+
 
 # actually listing what to sell
 
@@ -42,10 +46,10 @@ for item in getInventory():
 
     try:
         spread = getOrderSpreads(traceName(item))
-        if profitCheck <= getMinSellOrder(traceName(item)) and volume >= volumeThresh and spread < spreadThresh * getAverageMedian(traceName(item)):
+        if profitCheck <= getMinSellOrder(traceName(item)) and volume >= volumeThresh and spread <= spreadThresh * getAverageMedian(traceName(item)):
             sellable.append((traceName(item), getMinSellOrder(traceName(item)), getMaxRank(traceName(item))))
-        # elif [has been 7 days]:
-            # sellable.append((item, getMinSellOrder(traceName(item)), getMaxRank(traceName(item))))
+        # elif checkAge(item) >= minHold:
+        #    sellable.append((traceName(item), getMinSellOrder(traceName(item)), getMaxRank(traceName(item))))
     except TypeError:
         pass
 
