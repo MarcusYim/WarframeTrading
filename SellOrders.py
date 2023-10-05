@@ -1,7 +1,7 @@
 import csv
 import datetime
 import sqlite3
-from FindDeals import replaceTuples, getAverageVolume, getMaxRank, ordersCur, getOrderSpreads
+from FindDeals import replaceTuples, getAverageVolume, getMaxRank, ordersCur, getOrderSpreads, getAverageMedian
 import os
 
 profitMargin = 0.02  # must sell at a minimum x% profit if not dumping
@@ -9,7 +9,7 @@ minHold = 7  # hold items for x days before considering dumping
 
 # it would be nice if these were somehow set in the ui bc I don't want to pull these from FindDeals
 volumeThresh = 50
-spreadThresh = 5
+medianThresh = 0.05  # ensure sale price consistency
 
 invCon = sqlite3.connect("inventory.db")
 invCur = invCon.cursor()
@@ -40,7 +40,7 @@ for item in getInventory():
 
     try:
         spread = getOrderSpreads(traceName(item))
-        if profitCheck <= getMinSellOrder(traceName(item)) and volume >= volumeThresh and spread <= spreadThresh:
+        if profitCheck <= getMinSellOrder(traceName(item)) and volume >= volumeThresh and spread <= medianThresh * getAverageMedian(traceName(item)):
             sellable.append((item, getMinSellOrder(traceName(item)), getMaxRank(traceName(item))))
         # elif [has been 7 days]:
             # sellable.append((item, getMinSellOrder(traceName(item)), getMaxRank(traceName(item))))
