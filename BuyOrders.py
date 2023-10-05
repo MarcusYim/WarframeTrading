@@ -85,7 +85,7 @@ for item in getAllItems():
 
     try:
         orderSpread = getOrderSpreads(item)
-        if slope > slopeThreshold and orderSpread < percentMedian * getAverageMedian(item) and volume > volumeThreshold:
+        if slope >= slopeThreshold and orderSpread <= percentMedian * getAverageMedian(item) and volume >= volumeThreshold:
             buyable.append((item, getMaxBuyOrder(item), getMaxRank(item)))
     except TypeError:
         pass
